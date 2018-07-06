@@ -139,9 +139,19 @@ static int
 sys_env_set_trapframe(envid_t envid, struct Trapframe *tf)
 {
 	// LAB 5: Your code here.
-	// Remember to check whether the user has supplied us with a good
-	// address!
-	panic("sys_env_set_trapframe not implemented");
+	
+	  int ret=0;  
+    struct Env *e; 
+	if ((ret = envid2env(envid, &e, 1))<0)
+	return -E_BAD_ENV;
+	
+	e->env_tf = *tf;
+	user_mem_assert(e, tf, sizeof(struct Trapframe), PTE_U);
+	tf->tf_cs = GD_UT | 0x3; //user text//
+    tf->tf_eflags |= FL_IF;
+     tf->tf_eflags |=FL_IOPL_0; //I/O Privilege level 0
+	return 0;
+	//panic("sys_env_set_trapframe not implemented");
 }
 
 // Set the page fault upcall for 'envid' by modifying the corresponding struct
@@ -201,7 +211,7 @@ sys_page_alloc(envid_t envid, void *va, int perm)
     if (pi == NULL) {
         return -E_NO_MEM;
     }
-    pi->pp_ref++;
+    //pi->pp_ref++;
     //page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm)-> physical page pp to virtual address va
     if (page_insert(env->env_pgdir, pi, va, perm) != 0) {
         page_free(pi);
@@ -293,7 +303,11 @@ sys_page_map(envid_t srcenvid, void *srcva,
 
     if (((*srcpte) & PTE_W) == 0 && ((perm & PTE_W) == PTE_W)) {
         return -E_INVAL;
+        
     }
+    
+    if (((perm & (PTE_P | PTE_U)) != (PTE_P | PTE_U)) || (perm & ~(PTE_SYSCALL)) || ((perm & PTE_W) & (*srcpte)) != (perm & PTE_W))
+       return -E_INVAL;  
 
     int result = page_insert(dstenv->env_pgdir, srcpi, dstva, perm);
     if (result != 0) {
@@ -485,48 +499,39 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 switch (syscallno)
  	{
  	   case SYS_cputs:
-      	   sys_cputs((char *) a1, (size_t) a2);
-           return 0;
- 	   
-	   case SYS_cgetc:
-	   return sys_cgetc(); 
-	   
+      	     sys_cputs((char *) a1, (size_t) a2);
+             return 0;
+ 	   case SYS_cgetc:
+	     return sys_cgetc(); 
 	   case SYS_getenvid: 
-	   return sys_getenvid(); 
-	   
+	     return sys_getenvid(); 
 	   case SYS_env_destroy: 
-	   return sys_env_destroy((envid_t) a1); 
-	   
-	   case SYS_yield:
-	   sys_yield();
-	   return 0;
-	 
-	   case SYS_exofork:
-           return sys_exofork();
-           
-  	   case SYS_env_set_status:
-           return sys_env_set_status(a1, (int)a2);
-        
-	   case SYS_page_alloc:
-           return sys_page_alloc(a1, (void*)a2, (int) a3);
-          
-           case SYS_page_map:
-           return sys_page_map(a1, (void*)a2,(envid_t)a3, (void*)a4, (int)a5);
-         
-	   case SYS_page_unmap:
-           return sys_page_unmap(a1, (void*)a2);
-       
-	   case SYS_env_set_pgfault_upcall:
-           return sys_env_set_pgfault_upcall(a1,(void *)a2);
-         
-	   case SYS_ipc_try_send:
-           return sys_ipc_try_send(a1, a2, (void *) a3, a4);
+	     return sys_env_destroy((envid_t) a1); 
+	     case SYS_yield:
+	     sys_yield();
+	      return 0;
+	      case SYS_exofork:
+         return sys_exofork();
+        case SYS_env_set_status:
+         return sys_env_set_status(a1, (int)a2);
+        case SYS_page_alloc:
+         return sys_page_alloc(a1, (void*)a2, (int) a3);
+          case SYS_page_map:
+          return sys_page_map(a1, (void*)a2,(envid_t)a3, (void*)a4, (int)a5);
+         case SYS_page_unmap:
+       return sys_page_unmap(a1, (void*)a2);
+       case SYS_env_set_pgfault_upcall:
+         return sys_env_set_pgfault_upcall(a1,(void *)a2);
+         case SYS_ipc_try_send:
+         return sys_ipc_try_send(a1, a2, (void *) a3, a4);
 
-           case SYS_ipc_recv:
-           return sys_ipc_recv((void *) a1);
- 	   
-	   default:
-           return -E_INVAL;     
+         case SYS_ipc_recv:
+         return sys_ipc_recv((void *) a1);
+         
+          case SYS_env_set_trapframe:
+			return (int32_t)sys_env_set_trapframe(a1, (void*) a2);
+ 	   default:
+             return -E_INVAL;     
 	} 
 	/*panic("syscall not implemented");
 

@@ -480,7 +480,7 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 			                                                  //calculates the page table index        
 
 	// Fill this function in
-	//return NULL;
+	//return NULL
 }
 
 //
@@ -549,6 +549,8 @@ page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm)
         //pgdir[PDX(va)] |= perm;
 	return 0;
 	
+	
+	
 }
 
 //
@@ -565,7 +567,19 @@ page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm)
 struct PageInfo *
 page_lookup(pde_t *pgdir, void *va, pte_t **pte_store)
 {
-	pte_t *pte = pgdir_walk(pgdir, va, 0);             //page is not created
+	
+	pte_t *pte = pgdir_walk(pgdir, va, 0);;
+
+	if (!pte || !(*pte & PTE_P))
+	return NULL;
+	if (pte_store)
+	*pte_store = pte;
+
+	return pa2page(PTE_ADDR(*pte));
+	}
+	
+	
+	/*pte_t *pte = pgdir_walk(pgdir, va, 0);             //page is not created
 
         if (!pte) {                                        //page is not mapped to va
               return NULL;
@@ -574,11 +588,13 @@ page_lookup(pde_t *pgdir, void *va, pte_t **pte_store)
              *pte_store = pte;                             //address of pte of the page is stored
         }
 	return pa2page(PTE_ADDR(*pte)); //page mapped at virtual address va is returned
-	//return NULL;
+	//return NULL;*/
 	
-}
+	
+	
 
-//
+
+
 // Unmaps the physical page at virtual address 'va'.
 // If there is no physical page at that address, silently does nothing.
 //

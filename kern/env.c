@@ -78,10 +78,9 @@ envid2env(envid_t envid, struct Env **env_store, bool checkperm)
 	struct Env *e;
 
 	// If envid is zero, return the current environment.
-	if (envid == 0) 
-	{
-           *env_store = curenv;
-	   return 0;
+	if (envid == 0) {
+		*env_store = curenv;
+		return 0;
 	}
 
 	// Look up the Env structure via the index part of the envid,
@@ -90,10 +89,9 @@ envid2env(envid_t envid, struct Env **env_store, bool checkperm)
 	// (i.e., does not refer to a _previous_ environment
 	// that used the same slot in the envs[] array).
 	e = &envs[ENVX(envid)];
-	if (e->env_status == ENV_FREE || e->env_id != envid) 
-	{
-	   *env_store = 0;
-	   return -E_BAD_ENV;
+	if (e->env_status == ENV_FREE || e->env_id != envid) {
+		*env_store = 0;
+		return -E_BAD_ENV;
 	}
 
 	// Check that the calling environment has legitimate permission
@@ -496,8 +494,6 @@ env_create(uint8_t *binary, enum EnvType type)
 {
 	// LAB 3: Your code here.
 
-	// If this is the file server (type == ENV_TYPE_FS) give it I/O privileges.
-	// LAB 5: Your code here.
 	
 	struct Env* e;
 
@@ -514,6 +510,14 @@ env_create(uint8_t *binary, enum EnvType type)
                             
 	load_icode(e, binary);                             //loads the elf binary image into the environment
 	e->env_type = type;                                //set the environment type
+
+
+	// If this is the file server (type == ENV_TYPE_FS) give it I/O privileges.
+	// LAB 5: Your code here.
+
+	if(type == ENV_TYPE_FS)
+        e->env_tf.tf_eflags =e->env_tf.tf_eflags|FL_IOPL_3; //eflags i/o privilege level 3//eflags in mmu.h
+
 }
 
 //
@@ -530,33 +534,32 @@ env_free(struct Env *e)
 	// before freeing the page directory, just in case the page
 	// gets reused.
 	if (e == curenv)
-	lcr3(PADDR(kern_pgdir));
+		lcr3(PADDR(kern_pgdir));
 
 	// Note the environment's demise.
 	// cprintf("[%08x] free env %08x\n", curenv ? curenv->env_id : 0, e->env_id);
 
 	// Flush all mapped pages in the user portion of the address space
 	static_assert(UTOP % PTSIZE == 0);
-	for (pdeno = 0; pdeno < PDX(UTOP); pdeno++) 
-	{
-            // only look at mapped page tables
-	    if (!(e->env_pgdir[pdeno] & PTE_P))
-	    continue;
+	for (pdeno = 0; pdeno < PDX(UTOP); pdeno++) {
 
-	    // find the pa and va of the page table
-	    pa = PTE_ADDR(e->env_pgdir[pdeno]);
-	    pt = (pte_t*) KADDR(pa);
+		// only look at mapped page tables
+		if (!(e->env_pgdir[pdeno] & PTE_P))
+			continue;
 
-	    // unmap all PTEs in this page table
-	    for (pteno = 0; pteno <= PTX(~0); pteno++) 
-	    {
-		if (pt[pteno] & PTE_P)
-		page_remove(e->env_pgdir, PGADDR(pdeno, pteno, 0));
-	    }
+		// find the pa and va of the page table
+		pa = PTE_ADDR(e->env_pgdir[pdeno]);
+		pt = (pte_t*) KADDR(pa);
 
-	    // free the page table itself
-	    e->env_pgdir[pdeno] = 0;
-	    page_decref(pa2page(pa));
+		// unmap all PTEs in this page table
+		for (pteno = 0; pteno <= PTX(~0); pteno++) {
+			if (pt[pteno] & PTE_P)
+				page_remove(e->env_pgdir, PGADDR(pdeno, pteno, 0));
+		}
+
+		// free the page table itself
+		e->env_pgdir[pdeno] = 0;
+		page_decref(pa2page(pa));
 	}
 
 	// free the page directory
@@ -581,18 +584,16 @@ env_destroy(struct Env *e)
 	// If e is currently running on other CPUs, we change its state to
 	// ENV_DYING. A zombie environment will be freed the next time
 	// it traps to the kernel.
-	if (e->env_status == ENV_RUNNING && curenv != e) 
-	{
-           e->env_status = ENV_DYING;
-	   return;
+	if (e->env_status == ENV_RUNNING && curenv != e) {
+		e->env_status = ENV_DYING;
+		return;
 	}
 
 	env_free(e);
 
-	if (curenv == e) 
-	{
-	   curenv = NULL;
-	   sched_yield();
+	if (curenv == e) {
+		curenv = NULL;
+		sched_yield();
 	}
 }
 
@@ -656,7 +657,7 @@ env_run(struct Env *e)
           curenv = e;                                                      
           curenv->env_status = ENV_RUNNING;                                
           curenv->env_runs++;                                              
-          lcr3(PADDR(curenv->env_pgdir));                                   
+         lcr3(PADDR(curenv->env_pgdir));                                    
         }
         //step 2
 	 unlock_kernel();

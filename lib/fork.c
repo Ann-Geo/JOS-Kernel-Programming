@@ -69,17 +69,23 @@ pgfault(struct UTrapframe *utf)
 // Returns: 0 on success, < 0 on error.
 // It is also OK to panic on error.
 //
-/*For each writable or copy-on-write page in its address space below UTOP, the parent calls duppage, which should map the page copy-on-write into the address space of the child and then remap the page copy-on-write in its own address space. duppage sets both PTEs so that the page is not writeable, and to contain PTE_COW in the "avail" field to distinguish copy-on-write pages from genuine read-only pages.*/
+/*For each writable or copy-on-write page in its address space below UTOP, the parent calls duppage, 
+which should map the page copy-on-write into the address space of the child and then remap the page 
+copy-on-write in its own address space. duppage sets both PTEs so that the page is not writeable, 
+and to contain PTE_COW in the "avail" field to distinguish copy-on-write pages from genuine read-only pages.*/
 static int
 duppage(envid_t envid, unsigned pn)
 {
      int r;
      uint32_t perm = PTE_P | PTE_COW | PTE_U;
      void * addr = (void *)(pn*PGSIZE);
-
+     
+     if (uvpt[pn] & PTE_SHARE) {  //0X400
+		sys_page_map(thisenv->env_id, addr, envid, addr, uvpt[pn]&PTE_SYSCALL);
+}
      // LAB 4: Your code here.
     //If the page passed is marked copy-on-write or writable 
-    if (uvpt[pn] & PTE_COW || uvpt[pn] & PTE_W) 
+   else if (uvpt[pn] & PTE_COW || uvpt[pn] & PTE_W)  //0X800
      {
      //then map the page at addr in parent to child at addr in its address space with perm COW
      if ((r = sys_page_map(thisenv->env_id, addr, envid, addr, perm)) < 0)

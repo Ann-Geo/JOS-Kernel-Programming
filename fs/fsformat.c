@@ -111,11 +111,13 @@ opendisk(const char *name)
 	super = alloc(BLKSIZE);
 	super->s_magic = FS_MAGIC;
 	super->s_nblocks = nblocks;
+	//cprintf("%x\n",nblocks);
 	super->s_root.f_type = FTYPE_DIR;
 	strcpy(super->s_root.f_name, "/");
 
 	nbitblocks = (nblocks + BLKBITSIZE - 1) / BLKBITSIZE;
 	bitmap = alloc(nbitblocks * BLKSIZE);
+	//panic("%x %x %x %x",nbitblocks * BLKSIZE, nblocks, nbitblocks, BLKBITSIZE);
 	memset(bitmap, 0xFF, nbitblocks * BLKSIZE);
 }
 
