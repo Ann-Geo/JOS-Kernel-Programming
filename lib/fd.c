@@ -211,12 +211,12 @@ read(int fdnum, void *buf, size_t n)
 	if ((r = fd_lookup(fdnum, &fd)) < 0
 	    || (r = dev_lookup(fd->fd_dev_id, &dev)) < 0)
 		return r;
-	if ((fd->fd_omode & O_ACCMODE) == O_WRONLY) {
+	if ((fd->fd_omode & O_ACCMODE) == O_WRONLY) { //O_ACCMODE=mask for open write only
 		cprintf("[%08x] read %d -- bad mode\n", thisenv->env_id, fdnum);
 		return -E_INVAL;
 	}
 	if (!dev->dev_read)
-		return -E_NOT_SUPP;
+		return -E_NOT_SUPP; //OPERATION NOT SUPPORTED//
 	return (*dev->dev_read)(fd, buf, n);
 }
 

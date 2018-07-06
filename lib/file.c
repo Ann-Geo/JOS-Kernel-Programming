@@ -24,8 +24,8 @@ fsipc(unsigned type, void *dstva)
 	if (debug)
 		cprintf("[%08x] fsipc %d %08x\n", thisenv->env_id, type, *(uint32_t *)&fsipcbuf);
 
-	ipc_send(fsenv, type, &fsipcbuf, PTE_P | PTE_W | PTE_U);
-	return ipc_recv(NULL, dstva, NULL);
+	ipc_send(fsenv, type, &fsipcbuf, PTE_P | PTE_W | PTE_U);  //fsipcbuf=pg, type=val
+	return ipc_recv(NULL, dstva, NULL);                //dstva=pg
 }
 
 static int devfile_flush(struct Fd *fd);
@@ -141,7 +141,21 @@ devfile_write(struct Fd *fd, const void *buf, size_t n)
 	// remember that write is always allowed to write *fewer*
 	// bytes than requested.
 	// LAB 5: Your code here
-	panic("devfile_write not implemented");
+     uint32_t max_write = PGSIZE - (sizeof(int) + sizeof(size_t));
+    // Write at most 'n' bytes from 'buf' to 'fd' at the current seek position.
+	if (n > max_write)
+	n = max_write;
+	
+	fsipcbuf.write.req_fileid = fd->fd_file.id;
+	fsipcbuf.write.req_n = n;
+	
+	memmove(fsipcbuf.write.req_buf, buf, n);
+	// Make an FSREQ_WRITE request to the file system server
+    // The number of bytes successfully written.
+	return (fsipc(FSREQ_WRITE, NULL));
+    
+	    //panic("devfile_write not implemented");*/
+	
 }
 
 static int

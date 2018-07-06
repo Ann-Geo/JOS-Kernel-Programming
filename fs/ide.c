@@ -80,6 +80,7 @@ ide_read(uint32_t secno, void *dst, size_t nsecs)
 		if ((r = ide_wait_ready(1)) < 0)
 			return r;
 		insl(0x1F0, dst, SECTSIZE/4);
+		//Transfer a string from the port address, specified in the DX register, into the ES:destination index register: 
 	}
 
 	return 0;
@@ -105,6 +106,9 @@ ide_write(uint32_t secno, const void *src, size_t nsecs)
 		if ((r = ide_wait_ready(1)) < 0)
 			return r;
 		outsl(0x1F0, src, SECTSIZE/4);
+		//  void outb(unsigned char value, unsigned short int port);
+		//Transfers a byte, word, or long from the memory address pointed to by the content of the AL, AX,
+		// or EAX register to the immediate 8-, 16-, or 32-bit port address.
 	}
 
 	return 0;

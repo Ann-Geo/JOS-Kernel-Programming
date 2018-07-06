@@ -14,7 +14,7 @@ diskaddr(uint32_t blockno)
 bool
 va_is_mapped(void *va)
 {
-	return (uvpd[PDX(va)] & PTE_P) && (uvpt[PGNUM(va)] & PTE_P);
+	return (uvpd[PDX(va)] & PTE_P) && (uvpt[PGNUM(va)] & PTE_P);//uvpt-read only virtual page table
 }
 
 // Is this virtual address dirty?
@@ -48,7 +48,19 @@ bc_pgfault(struct UTrapframe *utf)
 	// the disk.
 	//
 	// LAB 5: you code here:
+	 addr = ROUNDDOWN(addr, PGSIZE);
+        if ((r = sys_page_alloc(sys_getenvid(), addr, PTE_W|PTE_U|PTE_P)) < 0)
+        panic("sys_page_alloc in bc_pgfault");
+        // uint32_t secno = blockno * BLKSECTS;
 
+        if ((r = ide_read(blockno*BLKSECTS, addr, BLKSECTS)) < 0) 
+		panic("ide_read: %e", r);
+		/*ide_read reads the contents of the disk to the page, 
+		 * read the disk sector as a unit, according to The distance from addr
+		 *  to the DISKMAP address. The read contents are blockno*BLKSECTS 
+		 * (a BLOCK) starting from blockno*BLKSECT*/
+        
+        
 	// Clear the dirty bit for the disk block page since we just read the
 	// block from disk
 	if ((r = sys_page_map(0, addr, 0, addr, uvpt[PGNUM(addr)] & PTE_SYSCALL)) < 0)
@@ -77,6 +89,19 @@ flush_block(void *addr)
 		panic("flush_block of bad va %08x", addr);
 
 	// LAB 5: Your code here.
+	int r;
+	 envid_t envid = thisenv->env_id;
+if (va_is_mapped(addr) && va_is_dirty(addr))
+ {
+  addr = ROUNDDOWN(addr, PGSIZE);
+  //ide_write(uint32_t secno, const void *src, size_t nsecs)
+  if ((r = ide_write(blockno * 8, addr, 8)))//8=BLKSECTS
+    panic("in flush_block, ide_write: %e", r);
+   if ((r = sys_page_map(envid, addr, envid, addr, uvpt[PGNUM(addr)] & PTE_SYSCALL)) < 0)
+   //After writing the block to disk, flush_block should clear the PTE_D bit using sys_page_map
+     panic("in flush_block, sys_page_map: %e", r);
+ }
+  return;
 	panic("flush_block not implemented");
 }
 
