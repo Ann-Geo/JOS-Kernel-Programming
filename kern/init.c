@@ -51,6 +51,7 @@ i386_init(void)
 	// Acquire the big kernel lock before waking up APs
 	// Your code here:
 
+lock_kernel();
 	// Starting non-boot CPUs
 	boot_aps();
 
@@ -63,6 +64,19 @@ i386_init(void)
 #else
 	// Touch all you want.
 	ENV_CREATE(user_icode, ENV_TYPE_USER);
+	//ENV_CREATE(user_primes, ENV_TYPE_USER);
+	//ENV_CREATE(user_yield, ENV_TYPE_USER);
+	//ENV_CREATE(user_yield, ENV_TYPE_USER);
+	//ENV_CREATE(user_yield, ENV_TYPE_USER);
+	//ENV_CREATE(user_yield, ENV_TYPE_USER);
+	//ENV_CREATE(user_yield, ENV_TYPE_USER);
+	//ENV_CREATE(user_dumbfork, ENV_TYPE_USER);
+    //ENV_CREATE(user_faultread, ENV_TYPE_USER);
+    //ENV_CREATE(user_faultalloc, ENV_TYPE_USER);
+    //ENV_CREATE(user_faultdie, ENV_TYPE_USER);
+      //ENV_CREATE(user_faultallocbad, ENV_TYPE_USER);
+      //ENV_CREATE(user_faultnostack, ENV_TYPE_USER);
+      //ENV_CREATE(user_forktree, ENV_TYPE_USER);
 #endif // TEST*
 
 	// Should not be necessary - drains keyboard because interrupt has given up.
@@ -88,6 +102,8 @@ boot_aps(void)
 	// Write entry code to unused memory at MPENTRY_PADDR
 	code = KADDR(MPENTRY_PADDR);
 	memmove(code, mpentry_start, mpentry_end - mpentry_start);
+	
+	//void *memmove(void *dest, const void *src, size_t n);
 
 	// Boot each AP one at a time
 	for (c = cpus; c < cpus + ncpu; c++) {
@@ -97,7 +113,8 @@ boot_aps(void)
 		// Tell mpentry.S what stack to use 
 		mpentry_kstack = percpu_kstacks[c - cpus] + KSTKSIZE;
 		// Start the CPU at mpentry_start
-		lapic_startap(c->cpu_id, PADDR(code));
+		lapic_startap(c->cpu_id, PADDR(code)); //Start additional processor running entry code at addr.
+		//lapic_startap(uint8_t apicid, uint32_t addr)
 		// Wait for the CPU to finish some basic setup in mp_main()
 		while(c->cpu_status != CPU_STARTED)
 			;
@@ -122,9 +139,10 @@ mp_main(void)
 	// only one CPU can enter the scheduler at a time!
 	//
 	// Your code here:
-
+	lock_kernel();
+	sched_yield();
 	// Remove this after you finish Exercise 6
-	for (;;);
+	//for (;;);
 }
 
 /*
