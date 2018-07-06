@@ -47,8 +47,8 @@
 /*
  * Lab 3: Your code here for generating entry points for the different traps.
  */
-	
-	TRAPHANDLER_NOEC(trap_divide, T_DIVIDE)
+
+TRAPHANDLER_NOEC(trap_divide, T_DIVIDE)
 	TRAPHANDLER_NOEC(trap_debug, T_DEBUG)
 	TRAPHANDLER_NOEC(trap_nmi, T_NMI)
 	TRAPHANDLER_NOEC(trap_brkpt, T_BRKPT)
@@ -70,6 +70,24 @@
 
 
 
+  	TRAPHANDLER_NOEC(irq0, IRQ_OFFSET+0 ); 
+  	TRAPHANDLER_NOEC(irq1, IRQ_OFFSET+1 ); 
+  	TRAPHANDLER_NOEC(irq2, IRQ_OFFSET+2 ); 
+  	TRAPHANDLER_NOEC(irq3, IRQ_OFFSET+3 ); 
+  	TRAPHANDLER_NOEC(irq4, IRQ_OFFSET+4 ); 
+  	TRAPHANDLER_NOEC(irq5, IRQ_OFFSET+5 ); 
+  	TRAPHANDLER_NOEC(irq6, IRQ_OFFSET+6 ); 
+  	TRAPHANDLER_NOEC(irq7, IRQ_OFFSET+7 ); 
+  	TRAPHANDLER_NOEC(irq8, IRQ_OFFSET+8 ); 
+  	TRAPHANDLER_NOEC(irq9, IRQ_OFFSET+9 ); 
+  	TRAPHANDLER_NOEC(irq10, IRQ_OFFSET+10 ); 
+  	TRAPHANDLER_NOEC(irq11, IRQ_OFFSET+11 ); 
+  	TRAPHANDLER_NOEC(irq12, IRQ_OFFSET+12 ); 
+  	TRAPHANDLER_NOEC(irq13, IRQ_OFFSET+13 ); 
+  	TRAPHANDLER_NOEC(irq14, IRQ_OFFSET+14 ); 
+  	TRAPHANDLER_NOEC(irq15, IRQ_OFFSET+15 ); 
+
+
 /*
  * Lab 3: Your code here for _alltraps
  */
@@ -84,4 +102,7 @@ _alltraps:
 	popl %es
 	pushl %esp
 	call trap
+
+
+
 
