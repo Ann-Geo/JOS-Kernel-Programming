@@ -18,6 +18,13 @@ enum {
 	SYS_ipc_try_send,
 	SYS_ipc_recv,
 	SYS_time_msec,
+
+	//Ex 7 : transmit sys call
+	SYS_net_transmit,
+
+	//Ex 10 : receive system call
+	SYS_net_recv,
+
 	NSYSCALLS
 };
 

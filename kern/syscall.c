@@ -12,6 +12,7 @@
 #include <kern/console.h>
 #include <kern/sched.h>
 #include <kern/time.h>
+#include <kern/e1000.h>
 
 // Print a string to the system console.
 // The string is exactly 'len' characters long.
@@ -140,21 +141,21 @@ static int
 sys_env_set_trapframe(envid_t envid, struct Trapframe *tf)
 {
 	// LAB 5: Your code here.
+	  struct Env *e; 
+	  if ((envid2env(envid, &e, 1))<0)
+	  return -E_BAD_ENV;
 	
-	  int ret=0;  
-    struct Env *e; 
-	if ((ret = envid2env(envid, &e, 1))<0)
-	return -E_BAD_ENV;
-	
-	e->env_tf = *tf;
-	user_mem_assert(e, tf, sizeof(struct Trapframe), PTE_U);
-	tf->tf_cs = GD_UT | 0x3; //user text//
-    tf->tf_eflags |= FL_IF;
-     tf->tf_eflags |=FL_IOPL_0; //I/O Privilege level 0
-	return 0;
-	//panic("sys_env_set_trapframe not implemented");
+	  e->env_tf = *tf;
+	  //Remember to check whether the user has supplied us with a good address!
+	  user_mem_assert(e, tf, sizeof(struct Trapframe), PTE_U);
+	  tf->tf_cs = GD_UT | 0x3; 
+          tf->tf_eflags |= FL_IF;
+          tf->tf_eflags |= FL_IOPL_0; 
+	  return 0;
+	  //panic("sys_env_set_trapframe not implemented");
 }
-
+	
+	
 // Set the page fault upcall for 'envid' by modifying the corresponding struct
 // Env's 'env_pgfault_upcall' field.  When 'envid' causes a page fault, the
 // kernel will push a fault record onto the exception stack, then branch to
@@ -490,12 +491,51 @@ sys_ipc_recv(void *dstva)
 	
 }
 
-// Return the current time.
+// Ex 1 : Return the current time.
 static int
 sys_time_msec(void)
 {
 	// LAB 6: Your code here.
-	panic("sys_time_msec not implemented");
+
+	return time_msec();
+	//panic("sys_time_msec not implemented");
+}
+
+
+/*int sys_net_transmit(void *addr, size_t length)
+{
+	 user_mem_assert(curenv, addr, length, PTE_U);
+	 return transmit_packet(addr, length);
+}*/
+
+
+// Ex 7: Sys call - Transmit a network packet
+int sys_net_transmit(char *pkt_inputData, size_t size)
+{
+	// LAB 6: Your code here.
+	// panic("sys_net_transmit not implemented");
+	int try_send = 10;
+	user_mem_assert(curenv, pkt_inputData, size, PTE_P | PTE_U | PTE_W);
+	
+	while(try_send > 0 && transmit_packet(pkt_inputData, size) == -1)
+	{
+		sys_yield();
+		try_send--;
+	}
+	
+	if(try_send == 0)
+	{
+		return -1;
+	}
+	
+	return 0;
+}
+
+// Ex 11:  Receive a network packet
+static int sys_net_recv(uint8_t * addr)
+{
+	user_mem_assert(curenv, addr, E1000_TXPKT_MAX, PTE_U);
+	return e1000_recv(addr);
 }
 
 // Dispatches to the correct kernel function, passing the arguments.
@@ -539,6 +579,16 @@ switch (syscallno)
          
           case SYS_env_set_trapframe:
 			return (int32_t)sys_env_set_trapframe(a1, (void*) a2);
+	case SYS_time_msec:
+	return (int32_t)sys_time_msec();
+
+	case SYS_net_transmit:
+	return (int32_t)sys_net_transmit((void *)a1, (size_t)a2);
+
+
+	case SYS_net_recv:
+	return (int32_t)sys_net_recv((uint8_t *)a1);
+
  	   default:
              return -E_INVAL;     
 	} 

@@ -56,15 +56,16 @@ again:
 
 			// LAB 5: Your code here.
 			if ((fd = open(t, O_RDONLY)) < 0)
-     {
-      cprintf("open %s for read: %e", t, fd);
-       exit();
-     }
-     if (fd != 0) {
-       dup(fd, 0);
-       close(fd);
-    }
-     break;
+     			{
+      			   cprintf("open %s for read: %e", t, fd);
+       			   exit();
+     			}
+     			if (fd != 0) 
+			{
+       			   dup(fd, 0);
+       			   close(fd);
+    			}
+     			break;
 			//panic("< redirection not implemented");
 			//break;
 

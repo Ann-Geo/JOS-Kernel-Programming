@@ -49,11 +49,11 @@ pgfault(struct UTrapframe *utf)
         void *src_addr = (void *) ROUNDDOWN(addr, PGSIZE);
         memmove(PFTEMP, src_addr, PGSIZE);
 
-       if ((r = sys_page_map(0, PFTEMP, 0, src_addr, PTE_P | PTE_U | PTE_W)) < 0)
-       panic("pgfault: sys_page_map: %e\n", r);
+        if ((r = sys_page_map(0, PFTEMP, 0, src_addr, PTE_P | PTE_U | PTE_W)) < 0)
+        panic("pgfault: sys_page_map: %e\n", r);
       
-       if((sys_page_unmap(0, PFTEMP))<0)
-       panic("pgfault/fork: couldn't unmap the page at PFTEMP");
+        if((sys_page_unmap(0, PFTEMP))<0)
+        panic("pgfault/fork: couldn't unmap the page at PFTEMP");
  
 	//panic("pgfault not implemented");
 }
@@ -69,10 +69,7 @@ pgfault(struct UTrapframe *utf)
 // Returns: 0 on success, < 0 on error.
 // It is also OK to panic on error.
 //
-/*For each writable or copy-on-write page in its address space below UTOP, the parent calls duppage, 
-which should map the page copy-on-write into the address space of the child and then remap the page 
-copy-on-write in its own address space. duppage sets both PTEs so that the page is not writeable, 
-and to contain PTE_COW in the "avail" field to distinguish copy-on-write pages from genuine read-only pages.*/
+/*For each writable or copy-on-write page in its address space below UTOP, the parent calls duppage, which should map the page copy-on-write into the address space of the child and then remap the page copy-on-write in its own address space. duppage sets both PTEs so that the page is not writeable, and to contain PTE_COW in the "avail" field to distinguish copy-on-write pages from genuine read-only pages.*/
 static int
 duppage(envid_t envid, unsigned pn)
 {
@@ -80,27 +77,32 @@ duppage(envid_t envid, unsigned pn)
      uint32_t perm = PTE_P | PTE_COW | PTE_U;
      void * addr = (void *)(pn*PGSIZE);
      
-     if (uvpt[pn] & PTE_SHARE) {  //0X400
-		sys_page_map(thisenv->env_id, addr, envid, addr, uvpt[pn]&PTE_SYSCALL);
-}
-     // LAB 4: Your code here.
-    //If the page passed is marked copy-on-write or writable 
-   else if (uvpt[pn] & PTE_COW || uvpt[pn] & PTE_W)  //0X800
+     //LAB 5: Your code here.
+     if (uvpt[pn] & PTE_SHARE) 
+     {  
+	sys_page_map(thisenv->env_id, addr, envid, addr, uvpt[pn]&PTE_SYSCALL);
+     }
+     
+
+      // LAB 4: Your code here.
+     //If the page passed is marked copy-on-write or writable 
+     else if (uvpt[pn] & PTE_COW || uvpt[pn] & PTE_W)  //0X800
      {
-     //then map the page at addr in parent to child at addr in its address space with perm COW
-     if ((r = sys_page_map(thisenv->env_id, addr, envid, addr, perm)) < 0)
+        //then map the page at addr in parent to child at addr in its address space with perm COW
+        if ((r = sys_page_map(thisenv->env_id, addr, envid, addr, perm)) < 0)
+        panic("duppage: sys_page_map: %e\n", r);
+
+        // remap the page at addr in parent with perm that contains COW
+        if ((r = sys_page_map(thisenv->env_id, addr, thisenv->env_id, addr, perm)) < 0)
+        panic("duppage: sys_page_map: %e\n", r);
+
+     } 
+     else // if the page is read-only , map this addr of the page too in the child 
+     if((r = sys_page_map(thisenv->env_id, addr, envid, addr,PTE_P | PTE_U )) < 0)
      panic("duppage: sys_page_map: %e\n", r);
 
-     // remap the page at addr in parent with perm that contains COW
-     if ((r = sys_page_map(thisenv->env_id, addr, thisenv->env_id, addr, perm)) < 0)
-     panic("duppage: sys_page_map: %e\n", r);
+     return 0;
 
-    } 
-   else // if the page is read-only , map this addr of the page too in the child 
-   if((r = sys_page_map(thisenv->env_id, addr, envid, addr,PTE_P | PTE_U )) < 0)
-   panic("duppage: sys_page_map: %e\n", r);
-
-return 0;
 }
 
 //

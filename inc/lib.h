@@ -61,6 +61,12 @@ int	sys_ipc_try_send(envid_t to_env, uint32_t value, void *pg, int perm);
 int	sys_ipc_recv(void *rcv_pg);
 unsigned int sys_time_msec(void);
 
+//Ex 7 : network transmit syscall
+int sys_net_transmit(void *pkt_inputData, size_t size);
+
+//Ex 11 : receive system call
+int sys_net_recv(void * addr);
+
 // This must be inlined.  Exercise for reader: why?
 static inline envid_t __attribute__((always_inline))
 sys_exofork(void)

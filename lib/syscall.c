@@ -117,8 +117,22 @@ sys_ipc_recv(void *dstva)
 	return syscall(SYS_ipc_recv, 1, (uint32_t)dstva, 0, 0, 0, 0);
 }
 
+
 unsigned int
 sys_time_msec(void)
 {
 	return (unsigned int) syscall(SYS_time_msec, 0, 0, 0, 0, 0, 0);
 }
+
+//Ex 7: transmit packet system call
+int sys_net_transmit(void *addr, size_t length)
+{
+	return (int) syscall(SYS_net_transmit, 0, (uint32_t)addr, (uint32_t)length, 0, 0, 0);
+}
+
+//Ex 11: receive packet system call
+int sys_net_recv(void * addr)
+{
+	return (int) syscall(SYS_net_recv, 0, (uint32_t)addr, 0, 0, 0, 0);
+}
+

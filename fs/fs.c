@@ -232,10 +232,10 @@ file_get_block(struct File *f, uint32_t filebno, char **blk)
        // LAB 5: Your code here.
        
        uint32_t *diskbno = NULL;
-     uint32_t status = file_block_walk(f, filebno, &diskbno, 1);
+     uint32_t block = file_block_walk(f, filebno, &diskbno, 1);
 
-     if(status < 0)
-         return status;
+     if(block < 0)
+         return block;
 
      if(! *diskbno){
          *diskbno = alloc_block();

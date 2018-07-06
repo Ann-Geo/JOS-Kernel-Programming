@@ -494,6 +494,10 @@ env_create(uint8_t *binary, enum EnvType type)
 {
 	// LAB 3: Your code here.
 
+
+	// If this is the file server (type == ENV_TYPE_FS) give it I/O privileges.
+	// LAB 5: Your code here.
+
 	
 	struct Env* e;
 
@@ -510,10 +514,6 @@ env_create(uint8_t *binary, enum EnvType type)
                             
 	load_icode(e, binary);                             //loads the elf binary image into the environment
 	e->env_type = type;                                //set the environment type
-
-
-	// If this is the file server (type == ENV_TYPE_FS) give it I/O privileges.
-	// LAB 5: Your code here.
 
 	if(type == ENV_TYPE_FS)
         e->env_tf.tf_eflags =e->env_tf.tf_eflags|FL_IOPL_3; //eflags i/o privilege level 3//eflags in mmu.h
@@ -659,6 +659,8 @@ env_run(struct Env *e)
           curenv->env_runs++;                                              
          lcr3(PADDR(curenv->env_pgdir));                                    
         }
+        
+        
         //step 2
 	 unlock_kernel();
         env_pop_tf(&curenv->env_tf);                                       

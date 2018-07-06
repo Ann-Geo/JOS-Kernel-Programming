@@ -16,6 +16,7 @@
 #include <kern/spinlock.h>
 #include <kern/time.h>
 #include <kern/pci.h>
+#include <kern/e1000.h>
 
 static void boot_aps(void);
 
@@ -53,6 +54,17 @@ i386_init(void)
 	// Lab 6 hardware initialization functions
 	time_init();
 	pci_init();
+
+
+	//Ex 6 transmitting sample packets
+	/*char u[5]="Hello", h[5]="lab6", k[8]="welcome";
+	char a = 's';
+	transmit_packet(&a, 1);
+	transmit_packet(&u, 5);
+	transmit_packet(&h, 4);
+	transmit_packet(&k, 7);*/
+
+
 
 	// Acquire the big kernel lock before waking up APs
 	// Your code here:
