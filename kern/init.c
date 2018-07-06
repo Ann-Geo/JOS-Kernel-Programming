@@ -17,7 +17,6 @@
 
 static void boot_aps(void);
 
-
 void
 i386_init(void)
 {
@@ -96,6 +95,9 @@ boot_aps(void)
 		while(c->cpu_status != CPU_STARTED)
 			;
 	}
+	// We only have one user environment for now, so just run it.
+	env_run(&envs[0]);
+
 }
 
 // Setup code for APs
