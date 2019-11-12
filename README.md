@@ -1,6 +1,7 @@
 # JOS-Kernel-Programming
 The lab exercises are based on the MIT 6.828 Operating Systems Engineering course (Fall 2017)
 (https://pdos.csail.mit.edu/6.828/2017/)
+These lab exercises focus on fundamentals of developing operating systems such as virtual memory, kernel and user mode, system calls, threads, context switches, interrupts, interprocess communication, coordination of concurrent activities, and the interface between software and hardware. 
 The labs are structured as follows.
 
 Lab1: Lab1 concentrates on getting familiarized with x86 assembly language, QEMU x86 emulator, PC's power-on bootstrap procedure and boot loader for JOS kernel.
